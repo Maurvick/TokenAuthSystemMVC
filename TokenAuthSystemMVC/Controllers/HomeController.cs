@@ -1,28 +1,32 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using TokenAuthSystem.Areas.Identity.Data;
-using TokenAuthSystem.Models;
+using TokenAuthSystemMVC.Areas.Identity.Data;
+using TokenAuthSystemMVC.Interfaces;
+using TokenAuthSystemMVC.Models;
 
-namespace TokenAuthSystem.Controllers
+namespace TokenAuthSystemMVC.Controllers
 {
-    [Authorize]
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ITokenService _tokenService; 
 
-        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager)
+        public HomeController(
+            UserManager<ApplicationUser> userManager,
+            ITokenService tokenService)
         {
-            _logger = logger;
             _userManager = userManager;
+            _tokenService = tokenService;
         }
 
         public IActionResult Index()
         {
-            ViewData["UserID"] = _userManager.GetUserId(User);
-            _userManager.GetUserId(User);
+            string token = HttpContext.Session.GetString("Token") ?? "None.";
+            ViewData["UserToken"] = _tokenService.GetToken(token, 50);
+
+            ViewData["UserId"] = _userManager.GetUserId(User) ?? "None.";
+
             return View();
         }
 
@@ -34,7 +38,10 @@ namespace TokenAuthSystem.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(new ErrorViewModel 
+            { 
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier 
+            });
         }
     }
 }

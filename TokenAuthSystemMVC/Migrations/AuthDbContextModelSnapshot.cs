@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TokenAuthSystem.Data;
+using TokenAuthSystemMVC.Data;
 
 #nullable disable
 
-namespace TokenAuthSystem.Migrations
+namespace TokenAuthSystemMVC.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
     partial class AuthDbContextModelSnapshot : ModelSnapshot

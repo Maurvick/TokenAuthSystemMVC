@@ -1,31 +1,46 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TokenAuthSystem.Areas.Identity.Data;
-using TokenAuthSystem.Data;
+using TokenAuthSystemMVC.Areas.Identity.Data;
+using TokenAuthSystemMVC.Data;
+using TokenAuthSystemMVC.Interfaces;
+using TokenAuthSystemMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("AuthDbContextConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
+ConfigurationManager configuration = builder.Configuration;
 
-// Add services to the container.
+var connectionString = configuration.GetConnectionString("AuthDbContextConnection") ?? 
+    throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
+
+// Configure database.
 builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlServer(connectionString));
 
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<AuthDbContext>();
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
+    options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<AuthDbContext>();
 
+// Enable MVC.
 builder.Services.AddControllersWithViews();
+
+// Dependency injection of TokenService class.
+builder.Services.AddTransient<ITokenService, TokenService>();
 
 // Add support for Razor pages.
 builder.Services.AddRazorPages();
 
-// Add support for JWT tokens.
+// Enable sessions.
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession();
+
+// Configure JWT tokens.
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -35,9 +50,10 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "your_issuer",
-        ValidAudience = "your_audience",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
+        ValidIssuer = configuration["JWT:ValidIssuer"],
+        ValidAudience = configuration["JWT:ValidAudience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"] ??
+            throw new InvalidOperationException("JWT secret string 'JWT:SecretKey' not found.")))
     };
 });
 
@@ -51,16 +67,33 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 var app = builder.Build();
 
+// Add token to headers if exists.
+app.UseSession();
+app.Use(async (context, next) =>
+{
+    var token = context.Session.GetString("Token");
+
+    if (!string.IsNullOrEmpty(token))
+    {
+        context.Request.Headers.Append("Authorization", "Bearer " + token);
+    }
+
+    await next();
+});
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
+
+// Allow scripts in html. 
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthorization();
+app.UseAuthentication();
 
 app.MapControllerRoute(
     name: "default",

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using TokenAuthSystem.Areas.Identity.Data;
+using TokenAuthSystemMVC.Areas.Identity.Data;
 
-namespace TokenAuthSystem.Data;
+namespace TokenAuthSystemMVC.Data;
 
 public class AuthDbContext : IdentityDbContext<ApplicationUser>
 {

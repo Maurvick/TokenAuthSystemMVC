@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace TokenAuthSystem.Migrations
+namespace TokenAuthSystemMVC.Migrations
 {
     /// <inheritdoc />
     public partial class Fix1 : Migration

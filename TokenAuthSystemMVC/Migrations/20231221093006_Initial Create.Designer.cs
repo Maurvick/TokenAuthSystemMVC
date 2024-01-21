@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TokenAuthSystem.Data;
+using TokenAuthSystemMVC.Data;
 
 #nullable disable
 
-namespace TokenAuthSystem.Migrations
+namespace TokenAuthSystemMVC.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
     [Migration("20231221093006_Initial Create")]

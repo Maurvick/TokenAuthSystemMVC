@@ -1,4 +1,4 @@
-namespace TokenAuthSystem.Models
+namespace TokenAuthSystemMVC.Models
 {
     public class ErrorViewModel
     {

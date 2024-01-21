@@ -7,19 +7,28 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using TokenAuthSystem.Areas.Identity.Data;
+using TokenAuthSystemMVC.Areas.Identity.Data;
+using TokenAuthSystemMVC.Interfaces;
 
-namespace TokenAuthSystem.Areas.Identity.Pages.Account
+namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ITokenService _tokenService;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(
+            SignInManager<ApplicationUser> signInManager, 
+            ILogger<LoginModel> logger,
+            UserManager<ApplicationUser> userManager,
+            ITokenService tokenService)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _userManager = userManager;
+            _tokenService = tokenService;
         }
 
         /// <summary>
@@ -105,15 +114,35 @@ namespace TokenAuthSystem.Areas.Identity.Pages.Account
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
+            // Get user to create token
+            var user = await _userManager.FindByNameAsync(Input.Email);
+
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
+                    // Generate JWT token
+                    var generatedToken = _tokenService.GenerateJwtToken(user);
+
+                    if (generatedToken != null)
+                    {
+                        // Set JWT token to session
+                        HttpContext.Session.SetString("Token", generatedToken);
+
+                        _logger.LogInformation("User logged in.");
+
+                        return LocalRedirect(returnUrl);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Failed to create JWT token.");
+
+                        return Page();
+                    }
                 }
                 if (result.RequiresTwoFactor)
                 {

@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using TokenAuthSystem.Areas.Identity.Data;
+using TokenAuthSystemMVC.Areas.Identity.Data;
 
-namespace TokenAuthSystem.Areas.Identity.Pages.Account
+namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
@@ -183,6 +183,7 @@ namespace TokenAuthSystem.Areas.Identity.Pages.Account
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
+
             return (IUserEmailStore<ApplicationUser>)_userStore;
         }
     }
