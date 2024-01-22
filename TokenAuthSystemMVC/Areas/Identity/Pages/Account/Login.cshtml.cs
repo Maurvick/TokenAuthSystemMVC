@@ -4,6 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -20,11 +21,11 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         private readonly ITokenService _tokenService;
 
         public LoginModel(
-            SignInManager<ApplicationUser> signInManager, 
-            ILogger<LoginModel> logger,
-            UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        ILogger<LoginModel> logger,
+        UserManager<ApplicationUser> userManager,
             ITokenService tokenService)
-        {
+    {
             _signInManager = signInManager;
             _logger = logger;
             _userManager = userManager;

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -7,15 +8,16 @@ using TokenAuthSystemMVC.Models;
 
 namespace TokenAuthSystemMVC.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenService _tokenService; 
 
         public HomeController(
-            UserManager<ApplicationUser> userManager,
+        UserManager<ApplicationUser> userManager,
             ITokenService tokenService)
-        {
+    {
             _userManager = userManager;
             _tokenService = tokenService;
         }
@@ -24,9 +26,7 @@ namespace TokenAuthSystemMVC.Controllers
         {
             string token = HttpContext.Session.GetString("Token") ?? "None.";
             ViewData["UserToken"] = _tokenService.GetToken(token, 50);
-
             ViewData["UserId"] = _userManager.GetUserId(User) ?? "None.";
-
             return View();
         }
 

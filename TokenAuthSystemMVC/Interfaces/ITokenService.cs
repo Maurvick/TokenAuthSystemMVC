@@ -7,7 +7,5 @@ namespace TokenAuthSystemMVC.Interfaces
         string GenerateJwtToken(ApplicationUser user);
 
         string GetToken(string stringToSplit, int chunkSize);
-
-        bool IsTokenValid(string key, string issuer, string token);
     }
 }

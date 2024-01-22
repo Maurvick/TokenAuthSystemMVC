@@ -9,8 +9,6 @@ namespace TokenAuthSystemMVC.Services
 {
     public class TokenService : ITokenService
     {
-        private const double TOKEN_EXPIRATION_IN_DAYS = 7;
-
         private readonly IConfiguration _configuration;
 
         public TokenService(IConfiguration configuration)
@@ -24,7 +22,7 @@ namespace TokenAuthSystemMVC.Services
             {
                 new (ClaimTypes.NameIdentifier, user.Id),
                 // new (Claim(ClaimTypes.Role, user.Role),
-                new (ClaimTypes.Name, user.UserName),
+                new (ClaimTypes.Name, user.UserName!),
                 // Guid.NewGuid().ToString()),
             };
 
@@ -33,7 +31,7 @@ namespace TokenAuthSystemMVC.Services
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var expires = DateTime.UtcNow.AddDays(TOKEN_EXPIRATION_IN_DAYS);
+            var expires = DateTime.UtcNow.AddDays(7);
 
             var token = new JwtSecurityToken(
                 _configuration["JWT:ValidIssuer"],
@@ -59,33 +57,6 @@ namespace TokenAuthSystemMVC.Services
             }
 
             return token;
-        }
-
-        public bool IsTokenValid(string key, string issuer, string token)
-        {
-            var mySecret = Encoding.UTF8.GetBytes(key);
-            var mySecurityKey = new SymmetricSecurityKey(mySecret);
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            try
-            {
-                tokenHandler.ValidateToken(token, 
-                    new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidIssuer = issuer,
-                        ValidAudience = issuer,
-                        IssuerSigningKey = mySecurityKey,
-                    }, out SecurityToken validatedToken);
-            }
-            catch
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }

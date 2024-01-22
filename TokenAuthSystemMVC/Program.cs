@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -21,11 +20,14 @@ builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlServer(con
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
     options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<AuthDbContext>();
 
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
 // Enable MVC.
 builder.Services.AddControllersWithViews();
 
 // Dependency injection of TokenService class.
 builder.Services.AddTransient<ITokenService, TokenService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 // Add support for Razor pages.
 builder.Services.AddRazorPages();
@@ -38,9 +40,11 @@ builder.Services.AddSession();
 // Configure JWT tokens.
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    // Set options as IdentityConstats, so identity razor pages would work properly.
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -69,6 +73,7 @@ var app = builder.Build();
 
 // Add token to headers if exists.
 app.UseSession();
+
 app.Use(async (context, next) =>
 {
     var token = context.Session.GetString("Token");
@@ -82,24 +87,29 @@ app.Use(async (context, next) =>
 });
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days.
+    // You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
-// Allow scripts in html. 
 app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
-app.UseAuthentication();
+app.UseHttpsRedirection();
+
+app.UseAuthorization(); 
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Add routes for identity pages.
 app.MapRazorPages();
 
 app.Run();
