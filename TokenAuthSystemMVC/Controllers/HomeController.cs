@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using TokenAuthSystemMVC.Areas.Identity.Data;
-using TokenAuthSystemMVC.Interfaces;
 using TokenAuthSystemMVC.Models;
+using TokenAuthSystemMVC.Services;
 
 namespace TokenAuthSystemMVC.Controllers
 {
@@ -12,21 +12,30 @@ namespace TokenAuthSystemMVC.Controllers
     public class HomeController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ITokenService _tokenService; 
+        private readonly IJwtTokenProvider _jwtTokenProvider; 
 
         public HomeController(
-        UserManager<ApplicationUser> userManager,
-            ITokenService tokenService)
-    {
+            UserManager<ApplicationUser> userManager,
+            IJwtTokenProvider tokenService)
+        {
             _userManager = userManager;
-            _tokenService = tokenService;
+            _jwtTokenProvider = tokenService;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
-            string token = HttpContext.Session.GetString("Token") ?? "None.";
-            ViewData["UserToken"] = _tokenService.GetToken(token, 50);
-            ViewData["UserId"] = _userManager.GetUserId(User) ?? "None.";
+            if (!_jwtTokenProvider.IsTokenValid())
+            {
+                return Redirect("/Identity/Account/Login");
+            }
+
+            string token = HttpContext.Session.GetString("Token") ?? "";
+
+            ViewData["UserToken"] = _jwtTokenProvider.GetToken(token, 50);
+            ViewData["UserId"] = _userManager.GetUserId(User);
+            ViewData["IsTokenValid"] = _jwtTokenProvider.IsTokenValid();
+
             return View();
         }
 

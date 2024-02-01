@@ -4,12 +4,11 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using TokenAuthSystemMVC.Areas.Identity.Data;
-using TokenAuthSystemMVC.Interfaces;
+using TokenAuthSystemMVC.Services;
 
 namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 {
@@ -18,14 +17,14 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ITokenService _tokenService;
+        private readonly IJwtTokenProvider _tokenService;
 
         public LoginModel(
-        SignInManager<ApplicationUser> signInManager,
-        ILogger<LoginModel> logger,
-        UserManager<ApplicationUser> userManager,
-            ITokenService tokenService)
-    {
+            SignInManager<ApplicationUser> signInManager,
+            ILogger<LoginModel> logger,
+            UserManager<ApplicationUser> userManager,
+            IJwtTokenProvider tokenService)
+        {
             _signInManager = signInManager;
             _logger = logger;
             _userManager = userManager;
@@ -111,7 +110,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+            returnUrl ??= Url.Content("/");
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
@@ -127,21 +126,18 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     // Generate JWT token
-                    var generatedToken = _tokenService.GenerateJwtToken(user);
+                    string token = _tokenService.GenerateToken(user);
 
-                    if (generatedToken != null)
+                    if (!string.IsNullOrEmpty(token))
                     {
                         // Set JWT token to session
-                        HttpContext.Session.SetString("Token", generatedToken);
-
-                        _logger.LogInformation("User logged in.");
-
+                        HttpContext.Session.SetString("Token", token);
+                        _logger.LogInformation($"User logged in.");
                         return LocalRedirect(returnUrl);
                     }
                     else
                     {
                         ModelState.AddModelError(string.Empty, "Failed to create JWT token.");
-
                         return Page();
                     }
                 }
