@@ -87,8 +87,10 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             public bool RememberMe { get; set; }
         }
 
+        // When page loaded.
         public async Task OnGetAsync(string returnUrl = null)
         {
+            // Redirect when logged.
             if (User.Identity.IsAuthenticated)
             {
                 Response.Redirect("/");
@@ -108,6 +110,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
+        // When form submited
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("/");

@@ -1,8 +1,10 @@
 {
   "dependencies": {
-    "mssql1": {
-      "type": "mssql.local",
-      "connectionId": "ConnectionStrings:AuthDbContextConnection"
+    "sqlite1": {
+      "secretStore": "LocalSecretsFile",
+      "resourceId": null,
+      "type": "sqlite.local",
+      "connectionId": "ConnectionStrings:AppDbConnection"
     }
   }
 }

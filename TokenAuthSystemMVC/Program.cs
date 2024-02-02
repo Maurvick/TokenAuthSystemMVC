@@ -8,13 +8,14 @@ using TokenAuthSystemMVC.Data;
 using TokenAuthSystemMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("AuthDbContextConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("AppDbConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
 
 ConfigurationManager configuration = builder.Configuration;
 
 // Configure database.
-builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlite(connectionString));
 
+// Disable email confirmation.
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
     options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<AuthDbContext>();
 
