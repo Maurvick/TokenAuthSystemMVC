@@ -2,13 +2,19 @@
 @using TokenAuthSystemMVC.Areas.Identity.Data
 @using TokenAuthSystemMVC.Services;
 
-@inject IJwtTokenProvider ITokenService
+@inject IJwtTokenProvider IJwtTokenProvider
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
 <ul class="navbar-nav">
-@if(ITokenService.IsTokenValid())
+@if (IJwtTokenProvider.IsTokenValid())
 {
+    @if (User.IsInRole(UserRoles.Admin))
+    {
+        <li class="nav-item">
+            <a id="adminPage" href="/Auth/AdminPage" class="nav-link text-dark" title="Control">Admin Page</a>
+        </li>
+    }   
     <li class="nav-item">
         <a id="manage" class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @UserManager.GetUserName(User)!</a>
     </li>

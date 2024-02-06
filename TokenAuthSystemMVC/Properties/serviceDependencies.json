@@ -3,6 +3,10 @@
     "sqlite1": {
       "type": "sqlite",
       "connectionId": "ConnectionStrings:AppDbConnection"
+    },
+    "mssql1": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:UserDbConnection"
     }
   }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -8,16 +9,19 @@ using TokenAuthSystemMVC.Data;
 using TokenAuthSystemMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("AppDbConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("UserDbConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
 
 ConfigurationManager configuration = builder.Configuration;
 
-// Configure database.
-builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlite(connectionString));
+// Configure database to SQL SERVER.
+builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlServer(connectionString));
 
 // Disable email confirmation.
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
-    options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<AuthDbContext>();
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+    options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole>()
+    .AddDefaultTokenProviders()
+    .AddEntityFrameworkStores<AuthDbContext>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -26,6 +30,7 @@ builder.Services.AddControllersWithViews();
 
 // Dependency injection of TokenService class, using one instance per scope.
 builder.Services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
+
 builder.Services.AddHttpContextAccessor();
 
 // Add support for Razor pages.
@@ -106,6 +111,9 @@ app.UseHttpsRedirection();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Auth}/{action=AdminPage}/{id?}");
 app.MapRazorPages();
 
 app.UseAuthentication();

@@ -3,6 +3,7 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IJwtTokenProvider _tokenService;
+        private readonly IJwtTokenProvider _jwtTokenProvider;
 
         public LoginModel(
             SignInManager<ApplicationUser> signInManager,
@@ -28,7 +29,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _userManager = userManager;
-            _tokenService = tokenService;
+            _jwtTokenProvider = tokenService;
         }
 
         /// <summary>
@@ -125,11 +126,13 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-
+                
                 if (result.Succeeded)
                 {
+                    var userRoles = await _userManager.GetRolesAsync(user);
+
                     // Generate JWT token
-                    string token = _tokenService.GenerateToken(user);
+                    string token = _jwtTokenProvider.GenerateToken(user, userRoles);
 
                     if (!string.IsNullOrEmpty(token))
                     {

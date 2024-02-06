@@ -23,13 +23,15 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -37,6 +39,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _roleManager = roleManager;
         }
 
         /// <summary>
@@ -99,6 +102,9 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            [Display(Name = "Request admin permissions.")]
+            public bool IsAdmin { get; set; }
         }
 
 
@@ -125,6 +131,32 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+               
+                // Create role.
+                if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+                }            
+                if (!await _roleManager.RoleExistsAsync(UserRoles.User))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+                }
+                // Give role to user.
+                if (Input.IsAdmin)
+                {
+                    if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+                    {
+                        await _userManager.AddToRoleAsync(user, UserRoles.Admin);
+                    }
+                }
+                else
+                {
+                    if (await _roleManager.RoleExistsAsync(UserRoles.User))
+                    {
+                        await _userManager.AddToRoleAsync(user, UserRoles.User);
+                    }
+                }
+
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
