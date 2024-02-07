@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Users";
+}
+@model List<TokenAuthSystemMVC.Areas.Identity.Data.ApplicationUser>
+
+<h2>All Users</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Username</th>
+            <!-- Add other headers as needed -->
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td scope="row">@user.Id</td>
+                <td scope="row">@user.UserName</td>
+                <!-- Add other properties as needed -->
+            </tr>
+        }
+    </tbody>
+</table>

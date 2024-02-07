@@ -17,18 +17,18 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IJwtTokenProvider _tokenService;
+        private readonly IJwtTokenProvider _jwtTokenProvider;
 
         public LoginModel(
             SignInManager<ApplicationUser> signInManager,
             ILogger<LoginModel> logger,
             UserManager<ApplicationUser> userManager,
-            IJwtTokenProvider tokenService)
+            IJwtTokenProvider jwtTokenProvider)
         {
             _signInManager = signInManager;
             _logger = logger;
             _userManager = userManager;
-            _tokenService = tokenService;
+            _jwtTokenProvider = jwtTokenProvider;
         }
 
         /// <summary>
@@ -128,8 +128,10 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
+                    // var userRoles = await _userManager.GetRolesAsync(user);
+
                     // Generate JWT token
-                    string token = _tokenService.GenerateToken(user);
+                    string token = _jwtTokenProvider.GenerateToken(user);
 
                     if (!string.IsNullOrEmpty(token))
                     {

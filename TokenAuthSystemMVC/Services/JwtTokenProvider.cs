@@ -34,6 +34,11 @@ namespace TokenAuthSystemMVC.Services
                 // Guid.NewGuid().ToString()),
             };
 
+            //foreach (var userRole in userRoles)
+            //{
+            //    claims.Add(new Claim(ClaimTypes.Role, userRole));
+            //}
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"] ??
                 throw new InvalidOperationException("No key for JWT token provided.")));
 

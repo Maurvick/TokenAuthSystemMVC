@@ -125,6 +125,31 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+               
+                //if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+                //{
+                //    await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+                //}            
+                //if (!await _roleManager.RoleExistsAsync(UserRoles.User))
+                //{
+                //    await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+                //}
+
+                //if (Input.IsAdmin)
+                //{
+                //    if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+                //    {
+                //        await _userManager.AddToRoleAsync(user, UserRoles.Admin);
+                //    }
+                //}
+                //else
+                //{
+                //    if (await _roleManager.RoleExistsAsync(UserRoles.User))
+                //    {
+                //        await _userManager.AddToRoleAsync(user, UserRoles.User);
+                //    }
+                //}
+
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
