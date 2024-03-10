@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -10,34 +11,30 @@ namespace TokenAuthSystemMVC.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        private bool _isTokenExists;
-
-        public bool IsTokenExists
-        {
-            get { return _isTokenExists; }
-        }
-
-        public JwtTokenProvider(IConfiguration configuration, IHttpContextAccessor context)
+        public JwtTokenProvider(IConfiguration configuration, IHttpContextAccessor context, UserManager<ApplicationUser> userManager)
         {
             _configuration = configuration;
             _context = context;
+            _userManager = userManager;
         }
 
-        public string GenerateToken(ApplicationUser user)
+        public async Task<string> GenerateToken(ApplicationUser user)
         {
             var claims = new List<Claim>
             {
+                new (ClaimTypes.Name, user.UserName ?? "Unknown"),
                 new (ClaimTypes.NameIdentifier, user.Id),
-                // new (Claim(ClaimTypes.Role, user.Role),
-                new (ClaimTypes.Name, user.UserName!),
-                // Guid.NewGuid().ToString()),
             };
 
-            //foreach (var userRole in userRoles)
-            //{
-            //    claims.Add(new Claim(ClaimTypes.Role, userRole));
-            //}
+            // Add user roles to security claims
+            var roles = await _userManager.GetRolesAsync(user);
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"] ??
                 throw new InvalidOperationException("No key for JWT token provided.")));
@@ -53,8 +50,6 @@ namespace TokenAuthSystemMVC.Services
                 expires: expires,
                 signingCredentials: creds
             );
-
-            _isTokenExists = true;
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
@@ -75,7 +70,31 @@ namespace TokenAuthSystemMVC.Services
 
         public bool IsTokenValid()
         {
-            return !string.IsNullOrEmpty(_context.HttpContext.Session.GetString("Token"));
+            return !string.IsNullOrEmpty(_context?.HttpContext?.Session.GetString("Token"));
+        }
+
+        public string GetTokenExpirationTime()
+        {
+            DateTime expiresUtc = DateTime.MinValue;
+
+            var user = _context?.HttpContext?.User;
+
+            if (user != null)
+            {
+                // Find expiration time value in claims.
+                string? expValue = user.FindFirstValue("exp");
+
+                // Converts a Unix timestamp and returns its equivalent DateTime representation in UTC.
+                if (expValue != null && long.TryParse(expValue, out long expUnixTime))
+                {
+                    expiresUtc = DateTimeOffset.FromUnixTimeSeconds(expUnixTime).UtcDateTime;
+                }
+            }      
+
+            // Calculate the remaining time until expiration
+            TimeSpan timeUntilExpiration = expiresUtc - DateTime.UtcNow;
+
+            return timeUntilExpiration.TotalMinutes.ToString();
         }
     }
 }

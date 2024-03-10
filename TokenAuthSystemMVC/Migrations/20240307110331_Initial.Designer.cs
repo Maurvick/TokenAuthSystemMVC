@@ -9,10 +9,10 @@ using TokenAuthSystemMVC.Data;
 
 #nullable disable
 
-namespace TokenAuthSystemMVC.Migrations
+namespace TokenAuthSystemMvc.Server.Migrations
 {
-    [DbContext(typeof(AuthDbContext))]
-    [Migration("20240207152524_Initial")]
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20240307110331_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace TokenAuthSystemMVC.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.1")
+                .HasAnnotation("ProductVersion", "8.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);

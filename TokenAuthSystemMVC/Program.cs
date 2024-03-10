@@ -3,42 +3,36 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TokenAuthSystemMvc.Server.Models;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 using TokenAuthSystemMVC.Data;
 using TokenAuthSystemMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("AzureSqlServerConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
-
-ConfigurationManager configuration = builder.Configuration;
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string not found.");
 
 // Configure database.
-builder.Services.AddDbContext<AuthDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options => 
+    options.UseSqlServer(connectionString));
 
-// Disable email confirmation.
+// Add Identity API.
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-    options.SignIn.RequireConfirmedAccount = false)
-    .AddEntityFrameworkStores<AuthDbContext>();
-
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-// Enable MVC.
-builder.Services.AddControllersWithViews();
-
-// Dependency injection of TokenService class, using one instance per scope.
-builder.Services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
-builder.Services.AddHttpContextAccessor();
+    options.SignIn.RequireConfirmedEmail = false)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Add support for Razor pages.
 builder.Services.AddRazorPages();
 
-// Enable sessions.
-builder.Services.AddSession();
+// Enable MVC.
+builder.Services.AddControllersWithViews();
 
 // Configure JWT tokens.
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -48,10 +42,11 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidIssuer = configuration["JWT:ValidIssuer"],
-        ValidAudience = configuration["JWT:ValidAudience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"] ??
-            throw new InvalidOperationException("JWT secret string 'JWT:SecretKey' not found.")))
+        ValidIssuer = builder.Configuration.GetSection("JWT:ValidIssuer").Value,
+        ValidAudience = builder.Configuration.GetSection("JWT:ValidAudience").Value,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+            .GetBytes(builder.Configuration.GetSection("JWT:SecretKey").Value ??
+                throw new InvalidOperationException("JWT secret key not found."))) 
     };
 });
 
@@ -63,9 +58,14 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredUniqueChars = 0;
 });
 
-var app = builder.Build();
+// Dependency injection.
+builder.Services.AddTransient<IJwtTokenProvider, JwtTokenProvider>();
 
-app.UseStatusCodePagesWithRedirects("/Identity/Account/AccessDenied");
+// Enable sessions.
+builder.Services.AddSession();
+
+// Create an object of application.
+var app = builder.Build();
 
 // Add token to headers if exists.
 app.UseSession();
@@ -83,32 +83,63 @@ app.Use(async (context, next) =>
 });
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseMigrationsEndPoint();
-    app.UseDeveloperExceptionPage();
-}
-else
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days.
-    // You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseStaticFiles();
+app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseHttpsRedirection();
+// Required for user data managing.
+app.UseAuthentication();
+// Required for login and registration.
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
 
-app.UseAuthentication();
-app.UseAuthorization();
+// Create and assign roles. 
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = 
+        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    var roles = new[] { "Admin", "Manager", "Member" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+}
+
+// Seeding initial data. Create an admin.
+using (var scope = app.Services.CreateScope())
+{
+    var userManager =
+        scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    string adminEmail = "adminadmin@admin.com";
+    string adminPassword = "Test1234,";
+
+    if (await userManager.FindByEmailAsync(adminEmail) == null)
+    {
+        var user = new ApplicationUser();
+
+        user.UserName = adminEmail;
+        user.Email = adminEmail;
+        user.EmailConfirmed = true;
+
+        await userManager.CreateAsync(user, adminPassword);
+        await userManager.AddToRoleAsync(user, UserRoleModel.Admin);
+    }
+}
 
 app.Run();
-

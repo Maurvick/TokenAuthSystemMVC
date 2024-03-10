@@ -4,12 +4,12 @@ namespace TokenAuthSystemMVC.Services
 {
     public interface IJwtTokenProvider
     {
-        string GenerateToken(ApplicationUser user);
+        Task<string> GenerateToken(ApplicationUser user);
 
         string GetToken(string stringToSplit, int chunkSize);
 
-        bool IsTokenValid();
+        string GetTokenExpirationTime();
 
-        bool IsTokenExists { get; }
+        bool IsTokenValid();
     }
 }

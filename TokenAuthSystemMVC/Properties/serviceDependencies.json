@@ -1,14 +1,11 @@
 {
   "dependencies": {
-    "sqlite1": {
-      "type": "sqlite",
-      "connectionId": "ConnectionStrings:SqliteServerConnection",
-      "dynamicId": null
+    "secrets1": {
+      "type": "secrets"
     },
     "mssql1": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:AzureSqlServerConnection",
-      "dynamicId": null
+      "connectionId": "ConnectionStrings:DefaultConnection"
     }
   }
 }

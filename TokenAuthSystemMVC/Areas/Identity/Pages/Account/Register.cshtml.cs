@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using TokenAuthSystemMvc.Server.Models;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 
 namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
@@ -22,6 +23,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
@@ -29,7 +31,8 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -37,6 +40,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _roleManager = roleManager;
         }
 
         /// <summary>
@@ -125,35 +129,20 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-               
-                //if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
-                //{
-                //    await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-                //}            
-                //if (!await _roleManager.RoleExistsAsync(UserRoles.User))
-                //{
-                //    await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
-                //}
-
-                //if (Input.IsAdmin)
-                //{
-                //    if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
-                //    {
-                //        await _userManager.AddToRoleAsync(user, UserRoles.Admin);
-                //    }
-                //}
-                //else
-                //{
-                //    if (await _roleManager.RoleExistsAsync(UserRoles.User))
-                //    {
-                //        await _userManager.AddToRoleAsync(user, UserRoles.User);
-                //    }
-                //}
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
+                    // Ensure role is created.
+                    if (!await _roleManager.RoleExistsAsync(UserRoleModel.Admin))
+                        await _roleManager.CreateAsync(new IdentityRole(UserRoleModel.Admin));
+                    if (!await _roleManager.RoleExistsAsync(UserRoleModel.User))
+                        await _roleManager.CreateAsync(new IdentityRole(UserRoleModel.User));
+                    // Add user to role.
+                    if (await _roleManager.RoleExistsAsync(UserRoleModel.User))
+                        await _userManager.AddToRoleAsync(user, UserRoleModel.User);
+
                     _logger.LogInformation("User created a new account with password.");
 
                     var userId = await _userManager.GetUserIdAsync(user);

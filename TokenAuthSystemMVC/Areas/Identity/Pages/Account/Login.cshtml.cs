@@ -128,10 +128,8 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    // var userRoles = await _userManager.GetRolesAsync(user);
-
                     // Generate JWT token
-                    string token = _jwtTokenProvider.GenerateToken(user);
+                    string token = await _jwtTokenProvider.GenerateToken(user);
 
                     if (!string.IsNullOrEmpty(token))
                     {

@@ -4,9 +4,9 @@ using TokenAuthSystemMVC.Areas.Identity.Data;
 
 namespace TokenAuthSystemMVC.Data;
 
-public class AuthDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
-    public AuthDbContext(DbContextOptions<AuthDbContext> options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
 

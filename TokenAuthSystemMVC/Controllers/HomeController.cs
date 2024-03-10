@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
+using TokenAuthSystemMvc.Server.Models;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 using TokenAuthSystemMVC.Models;
 using TokenAuthSystemMVC.Services;
@@ -26,38 +27,18 @@ namespace TokenAuthSystemMVC.Controllers
         [AllowAnonymous]
         public IActionResult Index()
         {
-            if (!_jwtTokenProvider.IsTokenValid())
+            if (_jwtTokenProvider.IsTokenValid() is not true)
             {
                 return Redirect("/Identity/Account/Login");
             }
 
-            // Get the expiration time from the ClaimsPrincipal
-            ClaimsPrincipal user = HttpContext.User;
-
-            DateTime expiresUtc;
-
-            string? expValue = user.FindFirstValue("exp");
-
-            if (expValue != null && long.TryParse(expValue, out long expUnixTime))
-            {
-                expiresUtc = DateTimeOffset.FromUnixTimeSeconds(expUnixTime).UtcDateTime;
-            }
-            else
-            {
-                // Handle the case where "exp" is null or not convertible to long
-                expiresUtc = DateTime.MinValue;
-            }
-
-            // Calculate the remaining time until expiration
-            TimeSpan timeUntilExpiration = expiresUtc - DateTime.UtcNow;
-
-            ViewData["TokenValidUntil"] = $"Token expires in: {timeUntilExpiration.TotalMinutes} minutes";
-
             string token = HttpContext.Session.GetString("Token") ?? "";
 
+            ViewData["TokenValidUntil"] = $"Token expires in: {_jwtTokenProvider.GetTokenExpirationTime()} minutes";
             ViewData["UserToken"] = _jwtTokenProvider.GetToken(token, 50);
             ViewData["UserId"] = _userManager.GetUserId(User);
             ViewData["IsTokenValid"] = _jwtTokenProvider.IsTokenValid();
+            ViewData["UserRole"] = User.IsInRole(UserRoleModel.Admin);
 
             return View();
         }
