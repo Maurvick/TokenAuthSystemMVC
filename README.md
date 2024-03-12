@@ -13,3 +13,5 @@ Note: Switching to Sqlite after SQL Server requires deleting ALL migrations or y
 [.NET 6 Web API Create JSON Web Tokens (JWT) - User Registration / Login / Authentication](https://www.youtube.com/watch?v=Y-MjCw6thao)
 
 [Asp Net Core - Rest API Authorization with JWT (Roles Vs Claims Vs Policy) - Step by Step](https://www.youtube.com/watch?v=eVxzuOxWEiY)
+
+[Asp Net Core — Rest API Authorization with JWT (Roles Vs Claims Vs Policy) — Step by Step](https://mohamadlawand.medium.com/asp-net-core-rest-api-authorization-with-jwt-roles-vs-claims-vs-policy-step-by-step-f3d0838a70b)
