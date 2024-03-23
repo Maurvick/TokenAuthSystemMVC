@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TokenAuthSystemMvc.Server.Models;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 using TokenAuthSystemMVC.Data;
 using TokenAuthSystemMVC.Services;
@@ -16,8 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Add Identity API.
-builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-    options.SignIn.RequireConfirmedEmail = false)
+builder.Services.AddDefaultIdentity<ApplicationUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -60,6 +59,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 // Dependency injection.
 builder.Services.AddTransient<IJwtTokenProvider, JwtTokenProvider>();
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Enable sessions.
 builder.Services.AddSession();
@@ -82,6 +82,15 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.Use(async (context, next) =>
+{
+    if (context.Response.ToString().Contains("302"))
+        context.Response.Redirect("/Identity/Account/Login");
+
+    await next();
+});
+
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -103,43 +112,46 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Auth}/{action=Index}/{id?}");
 app.MapRazorPages();
 
 // Create and assign roles. 
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = 
-        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var roleManager = 
+//        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-    var roles = new[] { "Admin", "Manager", "Member" };
+//    var roles = new[] { "Admin", "Manager", "Member" };
 
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
-}
+//    foreach (var role in roles)
+//    {
+//        if (!await roleManager.RoleExistsAsync(role))
+//            await roleManager.CreateAsync(new IdentityRole(role));
+//    }
+//}
 
 // Seeding initial data. Create an admin.
-using (var scope = app.Services.CreateScope())
-{
-    var userManager =
-        scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var userManager =
+//        scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    string adminEmail = "adminadmin@admin.com";
-    string adminPassword = "Test1234,";
+//    string adminEmail = "adminadmin@admin.com";
+//    string adminPassword = "Test1234,";
 
-    if (await userManager.FindByEmailAsync(adminEmail) == null)
-    {
-        var user = new ApplicationUser();
+//    if (await userManager.FindByEmailAsync(adminEmail) == null)
+//    {
+//        var user = new ApplicationUser();
 
-        user.UserName = adminEmail;
-        user.Email = adminEmail;
-        user.EmailConfirmed = true;
+//        user.UserName = adminEmail;
+//        user.Email = adminEmail;
+//        user.EmailConfirmed = true;
 
-        await userManager.CreateAsync(user, adminPassword);
-        await userManager.AddToRoleAsync(user, UserRoleModel.Admin);
-    }
-}
+//        await userManager.CreateAsync(user, adminPassword);
+//        await userManager.AddToRoleAsync(user, UserRoleModel.Admin);
+//    }
+//}
 
 app.Run();
