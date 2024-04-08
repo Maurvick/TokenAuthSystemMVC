@@ -2,14 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using System.Security.Claims;
-using TokenAuthSystemMvc.Server.Models;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 using TokenAuthSystemMVC.Models;
 using TokenAuthSystemMVC.Services;
 
 namespace TokenAuthSystemMVC.Controllers
 {
+    // Authorize this controller, so tokens will work properly.
     [Authorize]
     public class HomeController : Controller
     {
@@ -24,22 +23,34 @@ namespace TokenAuthSystemMVC.Controllers
             _jwtTokenProvider = jwtTokenProvider;
         }
 
-        [AllowAnonymous]
         public IActionResult Index()
         {
-            if (_jwtTokenProvider.IsTokenValid() is not true)
-            {
-                return Redirect("/Identity/Account/Login");
-            }
+            //if (!_jwtTokenProvider.IsTokenValid())
+            //{
+            //    return Redirect("/Identity/Account/Login");
+            //}
 
             string token = HttpContext.Session.GetString("Token") ?? "";
-
             ViewData["TokenValidUntil"] = $"Token expires in: {_jwtTokenProvider.GetTokenExpirationTime()} minutes";
             ViewData["UserToken"] = _jwtTokenProvider.GetToken(token, 50);
             ViewData["UserId"] = _userManager.GetUserId(User);
             ViewData["IsTokenValid"] = _jwtTokenProvider.IsTokenValid();
-            ViewData["UserRole"] = User.IsInRole(UserRoleModel.Admin);
 
+            return View();
+        }
+
+        public IActionResult About()
+        {
+            return View();
+        }
+
+        public IActionResult Contacts()
+        {
+            return View();
+        }
+
+        public IActionResult Features()
+        {
             return View();
         }
 

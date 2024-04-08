@@ -135,16 +135,16 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     // Ensure role is created.
-                    if (!await _roleManager.RoleExistsAsync(UserRoleModel.Admin))
-                        await _roleManager.CreateAsync(new IdentityRole(UserRoleModel.Admin));
                     if (!await _roleManager.RoleExistsAsync(UserRoleModel.User))
                         await _roleManager.CreateAsync(new IdentityRole(UserRoleModel.User));
+                    
                     // Add user to role.
                     if (await _roleManager.RoleExistsAsync(UserRoleModel.User))
                         await _userManager.AddToRoleAsync(user, UserRoleModel.User);
 
                     _logger.LogInformation("User created a new account with password.");
 
+                    // Send email conformation.
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -154,7 +154,9 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId, code, returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                    // if email provider is ethereal
+                    if (Input.Email.Split(".")[1] == "ethereal")
+                        await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
