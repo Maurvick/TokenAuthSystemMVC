@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TokenAuthSystemMvc.Server.Models;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 using TokenAuthSystemMVC.Data;
 using TokenAuthSystemMVC.Services;
@@ -86,6 +85,15 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.Use(async (context, next) =>
+{
+    if (context.Response.ToString().Contains("302"))
+        context.Response.Redirect("/Identity/Account/Login");
+
+    await next();
+});
+
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -107,6 +115,9 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Auth}/{action=Index}/{id?}");
 app.MapRazorPages();
 
 // app.UseStatusCodePagesWithRedirects("/Identity/Account/AccessDenied");

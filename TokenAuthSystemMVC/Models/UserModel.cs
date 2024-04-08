@@ -1,4 +1,7 @@
-﻿namespace TokenAuthSystemMVC.Models
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TokenAuthSystemMVC.Models
 {
     public class UserModel
     {
