@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -85,13 +83,13 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.Use(async (context, next) =>
-{
-    if (context.Response.ToString().Contains("302"))
-        context.Response.Redirect("/Identity/Account/Login");
+//app.Use(async (context, next) =>
+//{
+//    if (context.Response.ToString().Contains("302"))
+//        context.Response.Redirect("/Identity/Account/Login");
 
-    await next();
-});
+//    await next();
+//});
 
 
 // Configure the HTTP request pipeline.
@@ -115,9 +113,6 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Auth}/{action=Index}/{id?}");
 app.MapRazorPages();
 
 // app.UseStatusCodePagesWithRedirects("/Identity/Account/AccessDenied");

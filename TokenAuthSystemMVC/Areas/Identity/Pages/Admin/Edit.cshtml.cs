@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 using TokenAuthSystemMVC.Data;
-using TokenAuthSystemMVC.Models;
 
 namespace TokenAuthSystemMVC.Areas.Identity.Pages.Admin
 {
