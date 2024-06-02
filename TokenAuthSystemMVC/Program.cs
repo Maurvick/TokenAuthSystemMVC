@@ -1,54 +1,72 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 using TokenAuthSystemMVC.Data;
 using TokenAuthSystemMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string not found.");
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION")
+    ?? throw new InvalidOperationException("Connection string not found.");
 
 // Configure database.
 builder.Services.AddDbContext<ApplicationDbContext>(options => 
     options.UseSqlServer(connectionString));
 
 // Add Identity API.
-builder.Services.AddDefaultIdentity<ApplicationUser>()
-    .AddRoles<IdentityRole>()
-    .AddDefaultTokenProviders()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-
-// Add support for Razor pages.
-builder.Services.AddRazorPages();
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddRoles<IdentityRole>()
+.AddDefaultTokenProviders()
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddAuthorization();
 
-// Enable MVC.
-builder.Services.AddControllersWithViews();
-
 // Configure JWT tokens.
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidIssuer = builder.Configuration.GetSection("JWT:ValidIssuer").Value,
-        ValidAudience = builder.Configuration.GetSection("JWT:ValidAudience").Value,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-            .GetBytes(builder.Configuration.GetSection("JWT:SecretKey").Value ??
-                throw new InvalidOperationException("JWT secret key not found."))) 
-    };
-});
+        options.ClientId = Environment.GetEnvironmentVariable("AUTHENTICATION_GOOGLE_CLIENT_ID") ??
+            throw new InvalidOperationException("Google client id not found.");
+        options.ClientSecret = Environment.GetEnvironmentVariable("AUTHENTICATION_GOOGLE_CLIENT_SECRET") ??
+            throw new InvalidOperationException("Google client secret not found.");
+    })
+    .AddMicrosoftAccount(options =>
+    {
+        options.ClientId = Environment.GetEnvironmentVariable("AUTHENTICATION_MICROSOFT_CLIENT_ID") ??
+            throw new InvalidOperationException("Microsoft client id not found.");
+        options.ClientSecret = Environment.GetEnvironmentVariable("AUTHENTICATION_MICROSOFT_CLIENT_SECRET") ??
+            throw new InvalidOperationException("Microsoft client secret not found.");
+    })
+    .AddGitHub(options =>
+    {
+        options.ClientId = Environment.GetEnvironmentVariable("AUTHENTICATION_GITHUB_CLIENT_ID") ??
+            throw new InvalidOperationException("Github client id not found.");
+        options.ClientSecret = Environment.GetEnvironmentVariable("AUTHENTICATION_GITHUB_CLIENT_SECRET") ??
+            throw new InvalidOperationException("Github client id not found.");
+    })
+    .AddJwtBearer(options =>
+    {
+        options.SaveToken = true;
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidIssuer = builder.Configuration.GetSection("JWT:ValidIssuer").Value,
+            ValidAudience = builder.Configuration.GetSection("JWT:ValidAudience").Value,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+                .GetBytes(builder.Configuration.GetSection("JWT:SecretKey").Value ??
+                    throw new InvalidOperationException("JWT secret key not found.")))
+        };
+    });
 
 // Edit password requirments.
 builder.Services.Configure<IdentityOptions>(options =>
@@ -60,10 +78,17 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 // Dependency injection.
 builder.Services.AddTransient<IJwtTokenProvider, JwtTokenProvider>();
+
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Enable sessions.
 builder.Services.AddSession();
+
+// Add support for Razor pages.
+builder.Services.AddRazorPages();
+
+// Enable MVC.
+builder.Services.AddControllersWithViews();
 
 // Create an object of application.
 var app = builder.Build();
@@ -83,15 +108,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-//app.Use(async (context, next) =>
-//{
-//    if (context.Response.ToString().Contains("302"))
-//        context.Response.Redirect("/Identity/Account/Login");
-
-//    await next();
-//});
-
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -99,6 +115,7 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
@@ -114,44 +131,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
-
-// app.UseStatusCodePagesWithRedirects("/Identity/Account/AccessDenied");
-
-// Create and assign roles. 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var roleManager = 
-//        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-//    var roles = new[] { "Admin", "Manager", "Member" };
-
-//    foreach (var role in roles)
-//    {
-//        if (!await roleManager.RoleExistsAsync(role))
-//            await roleManager.CreateAsync(new IdentityRole(role));
-//    }
-//}
-
-// Seeding initial data. Create an admin.
-//using (var scope = app.Services.CreateScope())
-//{
-//    var userManager =
-//        scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-//    string adminEmail = "adminadmin@admin.com";
-//    string adminPassword = "Test1234,";
-
-//    if (await userManager.FindByEmailAsync(adminEmail) == null)
-//    {
-//        var user = new ApplicationUser();
-
-//        user.UserName = adminEmail;
-//        user.Email = adminEmail;
-//        user.EmailConfirmed = true;
-
-//        await userManager.CreateAsync(user, adminPassword);
-//        await userManager.AddToRoleAsync(user, UserRoleModel.Admin);
-//    }
-//}
 
 app.Run();

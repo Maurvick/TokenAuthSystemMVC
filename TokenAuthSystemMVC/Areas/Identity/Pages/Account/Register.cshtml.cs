@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using TokenAuthSystemMvc.Server.Models;
 using TokenAuthSystemMVC.Areas.Identity.Data;
 
 namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
@@ -23,7 +22,6 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
@@ -31,8 +29,7 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender,
-            RoleManager<IdentityRole> roleManager)
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -40,7 +37,6 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
-            _roleManager = roleManager;
         }
 
         /// <summary>
@@ -68,14 +64,6 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
         /// </summary>
         public class InputModel
         {
-            [DataType(DataType.Text)]
-            [Display(Name = "First Name")]
-            public string FirstName { get; set; }
-
-            [DataType(DataType.Text)]
-            [Display(Name = "Last Name")]
-            public string LastName { get; set; }
-
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -108,10 +96,6 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                Response.Redirect("/");
-            }
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
@@ -124,44 +108,29 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
 
-                user.FirstName = Input.FirstName;
-                user.LastName = Input.LastName;
-
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
-                    // Ensure role is created.
-                    if (!await _roleManager.RoleExistsAsync(UserRoleModel.User))
-                        await _roleManager.CreateAsync(new IdentityRole(UserRoleModel.User));
-                    
-                    // Add user to role.
-                    if (await _roleManager.RoleExistsAsync(UserRoleModel.User))
-                        await _userManager.AddToRoleAsync(user, UserRoleModel.User);
-
                     _logger.LogInformation("User created a new account with password.");
 
-                    // Send email conformation.
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
-                        values: new { area = "Identity", userId, code, returnUrl },
+                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    // if email provider is ethereal
-                    if (Input.Email.Split(".")[1] == "ethereal")
-                        await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
+                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
                     else
                     {
@@ -199,7 +168,6 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
-
             return (IUserEmailStore<ApplicationUser>)_userStore;
         }
     }

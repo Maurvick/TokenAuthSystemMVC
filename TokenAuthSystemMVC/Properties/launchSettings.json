@@ -11,7 +11,14 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DATABASE_CONNECTION": "Server=db2427.public.databaseasp.net; Database=db2427; User Id=db2427; Password=Hr6#-4Nqg!9Q; Encrypt=False;",
+        "AUTHENTICATION_GOOGLE_CLIENT_ID": "Google Client Id",
+        "AUTHENTICATION_GOOGLE_CLIENT_SECRET": "Google Client Secret",
+        "AUTHENTICATION_MICROSOFT_CLIENT_ID": "Microsot Client Id",
+        "AUTHENTICATION_MICROSOFT_CLIENT_SECRET": "Microsoft Client Secret",
+        "AUTHENTICATION_GITHUB_CLIENT_ID": "Github Client Id",
+        "AUTHENTICATION_GITHUB_CLIENT_SECRET": "Github Client Secret"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:5260"

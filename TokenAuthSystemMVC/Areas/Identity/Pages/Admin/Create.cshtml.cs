@@ -28,19 +28,19 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Admin
         public UserModel UserModel { get; set; } = default!;
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
-        public async Task<IActionResult> OnPostAsync()
-        {
-            if (!ModelState.IsValid)
-            {
-                return Page();
-            }
-            // TODO: Check if user admin
+        //public async Task<IActionResult> OnPostAsync()
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return Page();
+        //    }
+        //    // TODO: Check if user admin
 
-            //_userManager.CreateAsync();
-            // _context.UserModel.Add(UserModel);
-            // await _context.SaveChangesAsync();
+        //    //_userManager.CreateAsync();
+        //    // _context.UserModel.Add(UserModel);
+        //    // await _context.SaveChangesAsync();
 
-            return RedirectToPage("./Index");
-        }
+        //    return RedirectToPage("./Index");
+        //}
     }
 }

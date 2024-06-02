@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TokenAuthSystemMVC", "TokenAuthSystemMVC\TokenAuthSystemMVC.csproj", "{CE634335-85A8-4926-804A-97D5CBF2102A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TokenAuthSystemMVCTests", "TokenAuthSystemMVCTests\TokenAuthSystemMVCTests.csproj", "{BDD3E523-BA51-468C-806D-EF5A2B1C7952}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{CE634335-85A8-4926-804A-97D5CBF2102A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE634335-85A8-4926-804A-97D5CBF2102A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE634335-85A8-4926-804A-97D5CBF2102A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDD3E523-BA51-468C-806D-EF5A2B1C7952}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDD3E523-BA51-468C-806D-EF5A2B1C7952}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDD3E523-BA51-468C-806D-EF5A2B1C7952}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDD3E523-BA51-468C-806D-EF5A2B1C7952}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using TokenAuthSystemMVC.Areas.Identity.Data;
-using TokenAuthSystemMVC.Services;
 
 namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
 {
@@ -16,19 +15,11 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IJwtTokenProvider _jwtTokenProvider;
 
-        public LoginModel(
-            SignInManager<ApplicationUser> signInManager,
-            ILogger<LoginModel> logger,
-            UserManager<ApplicationUser> userManager,
-            IJwtTokenProvider jwtTokenProvider)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
             _logger = logger;
-            _userManager = userManager;
-            _jwtTokenProvider = jwtTokenProvider;
         }
 
         /// <summary>
@@ -87,14 +78,8 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             public bool RememberMe { get; set; }
         }
 
-        // When page loaded.
         public async Task OnGetAsync(string returnUrl = null)
         {
-            // Redirect when logged.
-            if (User.Identity.IsAuthenticated)
-            {
-                Response.Redirect("/");
-            }
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
@@ -110,43 +95,25 @@ namespace TokenAuthSystemMVC.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
-        // When form submited
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("/");
+            returnUrl ??= Url.Content("~/");
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-            // Get user to create token
-            var user = await _userManager.FindByNameAsync(Input.Email);
 
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-
                 if (result.Succeeded)
                 {
-                    // Generate JWT token
-                    string token = await _jwtTokenProvider.GenerateToken(user);
-
-                    if (!string.IsNullOrEmpty(token))
-                    {
-                        // Set JWT token to session
-                        HttpContext.Session.SetString("Token", token);
-                        _logger.LogInformation($"User logged in.");
-                        return LocalRedirect(returnUrl);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, "Failed to create JWT token.");
-                        return Page();
-                    }
+                    _logger.LogInformation("User logged in.");
+                    return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
                 {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, Input.RememberMe });
+                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
                 }
                 if (result.IsLockedOut)
                 {

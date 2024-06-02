@@ -38,6 +38,12 @@
                     </tr>
                 }
             </div>
+            <div class="checkbox mb-3">
+                <label asp-for="IsAdmin" class="form-label">
+                    <input class="form-check-input" asp-for="IsAdmin" />
+                     @Html.DisplayNameFor(m => m.IsAdmin)
+                </label>
+            </div>            
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
