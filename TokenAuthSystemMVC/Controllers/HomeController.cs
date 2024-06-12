@@ -23,6 +23,7 @@ namespace TokenAuthSystemMVC.Controllers
             _jwtTokenProvider = jwtTokenProvider;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             //if (!_jwtTokenProvider.IsTokenValid())

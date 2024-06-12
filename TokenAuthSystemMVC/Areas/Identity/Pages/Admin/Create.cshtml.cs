@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using TokenAuthSystemMVC.Areas.Identity.Data;
@@ -7,6 +8,7 @@ using TokenAuthSystemMVC.Models;
 
 namespace TokenAuthSystemMVC.Areas.Identity.Pages.Admin
 {
+    [Authorize(Roles = "Admin")]
     public class CreateModel : PageModel
     {
         private readonly ApplicationDbContext _context;
