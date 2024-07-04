@@ -1,6 +1,14 @@
 # TokenAuthSystemMVC
 
+Diploma work
+
 Note: Switching to Sqlite after SQL Server requires deleting ALL migrations or you will encounter `syntax error near "max"` when you try to update database.
+
+# Preview
+
+![image](https://github.com/Maurvick/TokenAuthSystemMVC/assets/82706197/33b3f73c-3260-441d-9c42-6580d4a8a2db)
+
+Website link: https://waffles.runasp.net/Identity/Account/Login
 
 # References
 
